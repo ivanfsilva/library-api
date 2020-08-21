@@ -1,9 +1,9 @@
 package br.com.ivanfsilva.libraryapi.api.resources;
 
 import br.com.ivanfsilva.libraryapi.api.dto.BookDTO;
+import br.com.ivanfsilva.libraryapi.api.exception.BusinessException;
 import br.com.ivanfsilva.libraryapi.model.entity.Book;
 import br.com.ivanfsilva.libraryapi.service.BookService;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -87,13 +87,23 @@ public class BookControllerTest {
     @DisplayName("Deve lançar erro ao tentar cadastrar um livro com isbn já utilizado por outro")
     public void createBookWithDuplicatedIsbn() throws Exception {
 
-        String json = new ObjectMapper().writeValueAsString(new BookDTO());
+        BookDTO dto = createNewBook();
+
+        String json = new ObjectMapper().writeValueAsString(dto);
+        BDDMockito.given(service.save(Mockito.any(Book.class)))
+                .willThrow(new BusinessException("Isbn já cadastrado."));
 
         MockHttpServletRequestBuilder request = MockMvcRequestBuilders
                 .post(BOOK_API)
                 .contentType(MediaType.APPLICATION_JSON)
                 .accept(MediaType.APPLICATION_JSON)
                 .content(json);
+
+        mvc.perform(request)
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("errors", hasSize(1)))
+                .andExpect(jsonPath("errors[0]").value("Isbn já cadastrado."))
+                ;
 
     }
 

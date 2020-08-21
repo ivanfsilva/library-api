@@ -2,6 +2,7 @@ package br.com.ivanfsilva.libraryapi.api.resource;
 
 import br.com.ivanfsilva.libraryapi.api.dto.BookDTO;
 import br.com.ivanfsilva.libraryapi.api.exception.ApiErrors;
+import br.com.ivanfsilva.libraryapi.api.exception.BusinessException;
 import br.com.ivanfsilva.libraryapi.model.entity.Book;
 import br.com.ivanfsilva.libraryapi.service.BookService;
 import org.modelmapper.ModelMapper;
@@ -38,5 +39,11 @@ public class BookController {
     public ApiErrors handleValidationExceptions(MethodArgumentNotValidException ex) {
         BindingResult bindingResult = ex.getBindingResult();
         return new ApiErrors(bindingResult);
+    }
+
+    @ExceptionHandler(BusinessException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ApiErrors handleBusinessException(BusinessException ex) {
+        return new ApiErrors(ex);
     }
 }
