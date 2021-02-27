@@ -1,6 +1,7 @@
 package br.com.ivanfsilva.libraryapi.api.resource;
 
 import br.com.ivanfsilva.libraryapi.api.dto.LoanDTO;
+import br.com.ivanfsilva.libraryapi.api.dto.ReturnedLoanDTO;
 import br.com.ivanfsilva.libraryapi.model.entity.Book;
 import br.com.ivanfsilva.libraryapi.model.entity.Loan;
 import br.com.ivanfsilva.libraryapi.service.BookService;
@@ -37,6 +38,17 @@ public class LoanController {
         entity = service.save(entity);
 
         return entity.getId();
+    }
+
+    @PatchMapping("{id}")
+    public void returnBook( @PathVariable Long id,
+                            @RequestBody ReturnedLoanDTO dto ) {
+
+        Loan loan = service.getById(id).orElseThrow(
+                () -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        loan.setReturned(dto.getReturned());
+
+        service.update(loan);
     }
 
 }
