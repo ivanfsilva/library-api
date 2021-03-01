@@ -33,8 +33,4 @@ public class EmailServiceImpl implements EmailService {
 
     }
 
-    @Override
-    public void sendMails(List<String> mailsList) {
-
-    }
 }

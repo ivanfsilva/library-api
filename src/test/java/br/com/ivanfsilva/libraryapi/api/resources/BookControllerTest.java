@@ -5,6 +5,7 @@ import br.com.ivanfsilva.libraryapi.api.exception.BusinessException;
 import br.com.ivanfsilva.libraryapi.api.resource.BookController;
 import br.com.ivanfsilva.libraryapi.model.entity.Book;
 import br.com.ivanfsilva.libraryapi.service.BookService;
+import br.com.ivanfsilva.libraryapi.service.LoanService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.DisplayName;
@@ -48,12 +49,15 @@ public class BookControllerTest {
     @MockBean
     BookService service;
 
+    @MockBean
+    LoanService loanService;
+
     @Test
     @DisplayName("Deve criar um livro com sucesso.")
     public void createBookTest() throws Exception {
 
         BookDTO dto = createNewBook();
-        Book savedBook = Book.builder().id(10l).author("Artur").title("Aventuras").isbn("001").build();
+        Book savedBook = Book.builder().id(10l).author("Artur").title("As aventuras").isbn("001").build();
 
         BDDMockito.given(service.save(Mockito.any(Book.class))).willReturn(savedBook);
         String json = new ObjectMapper().writeValueAsString(dto);
@@ -64,13 +68,15 @@ public class BookControllerTest {
                 .accept(MediaType.APPLICATION_JSON)
                 .content(json);
 
-        mvc.perform(request)
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("id").isNotEmpty())
-                .andExpect(jsonPath("title").value(dto.getTitle()))
-                .andExpect(jsonPath("author").value(dto.getAuthor()))
-                .andExpect(jsonPath("isbn").value(dto.getIsbn()))
-                ;
+        mvc
+                .perform(request)
+                .andExpect( status().isCreated() )
+                .andExpect( jsonPath("id").value(10l) )
+                .andExpect( jsonPath("title").value(dto.getTitle()) )
+                .andExpect( jsonPath("author").value(dto.getAuthor()) )
+                .andExpect( jsonPath("isbn").value(dto.getIsbn()) )
+
+        ;
     }
 
     @Test
@@ -192,43 +198,26 @@ public class BookControllerTest {
     @Test
     @DisplayName("Deve atualizar um livro")
     public void updateBookTest() throws Exception {
-
         Long id = 1l;
         String json = new ObjectMapper().writeValueAsString(createNewBook());
 
-        Book updatingBook = Book.builder()
-                .id(1l)
-                .title("some title")
-                .author("some author")
-                .isbn("321")
-                .build();
+        Book updatingBook = Book.builder().id(1l).title("some title").author("some author").isbn("321").build();
+        BDDMockito.given( service.getById(id) ).willReturn( Optional.of(updatingBook) );
+        Book updatedBook = Book.builder().id(id).author("Artur").title("As aventuras").isbn("321").build();
+        BDDMockito.given(service.update(updatingBook)).willReturn(updatedBook);
 
-//        Book updatedBook = Book.builder()
-//                .id(id)
-//                .author("Artur")
-//                .title("As aventuras")
-//                .isbn("321")
-//                .build();
-
-        BDDMockito.given(service.getById(id))
-                .willReturn( Optional.of(updatingBook) );
-
-        Book updatedBook = Book.builder().id(id).author("Artur").title("As aventuras").isbn("001").build();
-        BDDMockito.given( service.update( updatingBook ) ).willReturn( updatedBook );
-
-        //execução (when)
         MockHttpServletRequestBuilder request = MockMvcRequestBuilders
                 .put(BOOK_API.concat("/" + 1))
                 .content(json)
                 .accept(MediaType.APPLICATION_JSON)
                 .contentType(MediaType.APPLICATION_JSON);
 
-        mvc.perform(request)
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("id").value(id))
-                .andExpect(jsonPath("title").value(createNewBook().getTitle()))
-                .andExpect(jsonPath("author").value(createNewBook().getAuthor()))
-                .andExpect(jsonPath("isbn").value("001"));
+        mvc.perform( request )
+                .andExpect( status().isOk() )
+                .andExpect( jsonPath("id").value(id) )
+                .andExpect( jsonPath("title").value(createNewBook().getTitle()) )
+                .andExpect( jsonPath("author").value(createNewBook().getAuthor()) )
+                .andExpect( jsonPath("isbn").value("321") );
     }
 
     @Test

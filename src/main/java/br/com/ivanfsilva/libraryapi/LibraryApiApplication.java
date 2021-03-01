@@ -17,22 +17,22 @@ import java.util.List;
 @EnableScheduling
 public class LibraryApiApplication {
 
-	@Autowired
-	private EmailService emailService;
+//	@Autowired
+//	private EmailService emailService;
 
 	@Bean
 	public ModelMapper modelMapper() {
 		return new ModelMapper();
 	}
 
-	@Bean
-	public CommandLineRunner runner() {
-		return args -> {
-			List<String> emails = Arrays.asList("42f7c5e873-d62d11@inbox.mailtrap.io");
-			emailService.sendMails("Testando serviço de emails.", emails);
-			System.out.println("EMAILS ENVIADOS");
-		};
-	}
+//	@Bean
+//	public CommandLineRunner runner() {
+//		return args -> {
+//			List<String> emails = Arrays.asList("42f7c5e873-d62d11@inbox.mailtrap.io");
+//			emailService.sendMails("Testando serviço de emails.", emails);
+//			System.out.println("EMAILS ENVIADOS");
+//		};
+//	}
 
 //	@Scheduled(cron = "0 31 16 1/1 * ?")
 //	public void testeAgendamentoTarefas() {
