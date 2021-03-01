@@ -1,10 +1,16 @@
 package br.com.ivanfsilva.libraryapi.service.impl;
 
+import br.com.ivanfsilva.libraryapi.api.dto.LoanFilterDTO;
 import br.com.ivanfsilva.libraryapi.api.exception.BusinessException;
+import br.com.ivanfsilva.libraryapi.model.entity.Book;
 import br.com.ivanfsilva.libraryapi.model.entity.Loan;
 import br.com.ivanfsilva.libraryapi.model.repository.LoanRepository;
 import br.com.ivanfsilva.libraryapi.service.LoanService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
+import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 
 public class LoanServiceImpl implements LoanService {
@@ -25,11 +31,28 @@ public class LoanServiceImpl implements LoanService {
 
     @Override
     public Optional<Loan> getById(Long id) {
-        return Optional.empty();
+        return repository.findById(id);
     }
 
     @Override
     public Loan update(Loan loan) {
-        return null;
+        return repository.save(loan);
+    }
+
+    @Override
+    public Page<Loan> find(LoanFilterDTO filterDTO, Pageable pageable) {
+        return repository.findByBookIsbnOrCustomer(filterDTO.getIsbn(), filterDTO.getCustomer(), pageable);
+    }
+
+    @Override
+    public Page<Loan> getLoansByBook(Book book, Pageable pageable) {
+        return repository.findByBook(book, pageable);
+    }
+
+    @Override
+    public List<Loan> getAllLateLoans() {
+        final Integer loanDays = 4;
+        LocalDate threeDaysAgo = LocalDate.now().minusDays(loanDays);
+        return repository.findByLoanDateLessThanAndNotReturned(threeDaysAgo);
     }
 }

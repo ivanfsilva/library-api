@@ -1,22 +1,35 @@
 package br.com.ivanfsilva.libraryapi.service;
 
+import br.com.ivanfsilva.libraryapi.api.dto.LoanFilterDTO;
 import br.com.ivanfsilva.libraryapi.api.exception.BusinessException;
 import br.com.ivanfsilva.libraryapi.model.entity.Book;
 import br.com.ivanfsilva.libraryapi.model.entity.Loan;
 import br.com.ivanfsilva.libraryapi.model.repository.LoanRepository;
 import br.com.ivanfsilva.libraryapi.service.impl.LoanServiceImpl;
+import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.BDDMockito;
+import org.mockito.Mockito;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.data.domain.*;
+import org.springframework.http.MediaType;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
 import java.time.LocalDate;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @ExtendWith(SpringExtension.class)
 public class LoanServiceTest {
@@ -83,4 +96,86 @@ public class LoanServiceTest {
 
         verify(repository, never()).save(savingLoan);
     }
+
+    @Test
+    @DisplayName("Deve obter as informações de um empréstimo pelo ID")
+    public void getLoanDetailsTest() {
+
+        Long id = 1L;
+
+        Loan loan = createLoan();
+        loan.setId(id);
+
+        Mockito.when(repository.findById(id)).thenReturn(Optional.of(loan));
+
+        Optional<Loan> result = service.getById(id);
+
+        assertThat(result.isPresent()).isTrue();
+        assertThat(result.get().getId()).isEqualTo(id);
+        assertThat(result.get().getCustomer()).isEqualTo(loan.getCustomer());
+        assertThat(result.get().getBook()).isEqualTo(loan.getBook());
+        assertThat(result.get().getLoanDate()).isEqualTo(loan.getLoanDate());
+
+        verify(repository).findById(id);
+
+    }
+
+    @Test
+    @DisplayName("Deve atualizar um empréstimo")
+    public void updateLoanTest() {
+        Long id = 1L;
+        Loan loan = createLoan();
+        loan.setId(id);
+
+        when( repository.save(loan) ).thenReturn( loan );
+
+        Loan updatedLoan = service.update(loan);
+
+        assertThat(updatedLoan.getReturned()).isTrue();
+        verify(repository).save(loan);
+
+    }
+
+    @Test
+    @DisplayName("Deve filtrar emprestimos pelas propriedades")
+    public void findLoanTest() throws Exception {
+
+        LoanFilterDTO loanFilterDTO = LoanFilterDTO
+                .builder()
+                .customer("Fulano")
+                .isbn("321")
+                .build();
+
+        Loan loan = createLoan();
+        loan.setId(1L);
+
+        PageRequest pageRequest = PageRequest.of(0,10);
+        List<Loan> lista = Arrays.asList(loan);
+
+        Page<Loan> page = new PageImpl<Loan>(lista, pageRequest, 1);
+        when( repository.findByBookIsbnOrCustomer(
+                Mockito.anyString(), Mockito.anyString(), Mockito.any(PageRequest.class)))
+                .thenReturn(page);
+
+        Page<Loan> result = service.find(loanFilterDTO, pageRequest);
+
+        assertThat(result.getTotalElements()).isEqualTo(1);
+        assertThat(result.getContent()).isEqualTo(lista);
+        assertThat(result.getPageable().getPageNumber()).isEqualTo(0);
+        assertThat(result.getPageable().getPageSize()).isEqualTo(10);
+
+    }
+
+    public static Loan createLoan() {
+        Book book = Book.builder().id(1L).build();
+        String customer = "Fulano";
+
+        return Loan.builder()
+                .book(book)
+                .customer(customer)
+                .loanDate(LocalDate.now())
+                .build();
+    }
+
+
 }
