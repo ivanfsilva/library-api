@@ -42,3 +42,5 @@ build/
 # Maven
 log/
 target/
+
+appfile.log
