@@ -6,19 +6,16 @@ import br.com.ivanfsilva.libraryapi.model.entity.Book;
 import br.com.ivanfsilva.libraryapi.model.entity.Loan;
 import br.com.ivanfsilva.libraryapi.model.repository.LoanRepository;
 import br.com.ivanfsilva.libraryapi.service.impl.LoanServiceImpl;
-import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.BDDMockito;
 import org.mockito.Mockito;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.data.domain.*;
-import org.springframework.http.MediaType;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
-import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
 import java.time.LocalDate;
 import java.util.Arrays;
@@ -28,8 +25,6 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @ExtendWith(SpringExtension.class)
 public class LoanServiceTest {
@@ -121,11 +116,11 @@ public class LoanServiceTest {
     }
 
     @Test
-    @DisplayName("Deve atualizar um empréstimo")
-    public void updateLoanTest() {
-        Long id = 1L;
+    @DisplayName("Deve atualizar um empréstimo.")
+    public void updateLoanTest(){
         Loan loan = createLoan();
-        loan.setId(id);
+        loan.setId(1l);
+        loan.setReturned(true);
 
         when( repository.save(loan) ).thenReturn( loan );
 
@@ -133,7 +128,6 @@ public class LoanServiceTest {
 
         assertThat(updatedLoan.getReturned()).isTrue();
         verify(repository).save(loan);
-
     }
 
     @Test
